@@ -1,0 +1,32 @@
+{
+  "name": "dsh-whale-clock",
+  "version": "1.0.0",
+  "description": "Persistent DeepSeek whale countdown widget: corner clock that turns red during DeepSeek peak-price windows and green off-peak, in local time.",
+  "license": "MIT",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./client/client.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime"
+      ],
+      "platform": "web"
+    }
+  },
+  "keywords": [
+    "deepseek",
+    "dsh",
+    "whale",
+    "clock",
+    "peak",
+    "pricing"
+  ]
+}
