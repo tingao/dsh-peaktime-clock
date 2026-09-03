@@ -3,6 +3,14 @@
   "version": "1.0.0",
   "description": "Persistent DeepSeek peak-time whale widget: corner clock that turns red during DeepSeek peak-price windows and green off-peak, in local time.",
   "license": "MIT",
+  "homepage": "https://github.com/tingao/dsh-peaktime-clock#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tingao/dsh-peaktime-clock.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tingao/dsh-peaktime-clock/issues"
+  },
   "type": "module",
   "main": "lib/index.js",
   "exports": {
