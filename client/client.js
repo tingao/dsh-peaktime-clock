@@ -1,4 +1,4 @@
-window.__ModuleLoader__.load({ id: "dsh-whale-clock", factory: (require) => {
+window.__ModuleLoader__.load({ id: "dsh-peaktime-clock", factory: (require) => {
 var module = { exports: {} }; var exports = module.exports;
 const React = require('react');
 const h = React.createElement;
@@ -105,10 +105,10 @@ const CSS = `
 `;
 
 function injectStyles() {
-  if (typeof document === 'undefined' || document.getElementById('dsh-whale-clock-style') !== null) return;
+  if (typeof document === 'undefined' || document.getElementById('dsh-peaktime-clock-style') !== null) return;
   const style = document.createElement('style');
-  style.id = 'dsh-whale-clock-style';
-  style.setAttribute('data-plugin', 'dsh-whale-clock');
+  style.id = 'dsh-peaktime-clock-style';
+  style.setAttribute('data-plugin', 'dsh-peaktime-clock');
   style.textContent = CSS;
   document.head.appendChild(style);
 }
@@ -216,7 +216,7 @@ function makePeakClock(ctx) {
 }
 
 // ── Plugin ────────────────────────────────────────────────────────────────
-exports.name = 'dsh-whale-clock/client';
+exports.name = 'dsh-peaktime-clock/client';
 exports.inject = ['slots', 'timer'];
 exports.apply = function apply(ctx) {
   injectStyles();

@@ -1,7 +1,7 @@
 {
-  "name": "dsh-whale-clock",
+  "name": "dsh-peaktime-clock",
   "version": "1.0.0",
-  "description": "Persistent DeepSeek whale countdown widget: corner clock that turns red during DeepSeek peak-price windows and green off-peak, in local time.",
+  "description": "Persistent DeepSeek peak-time whale widget: corner clock that turns red during DeepSeek peak-price windows and green off-peak, in local time.",
   "license": "MIT",
   "type": "module",
   "main": "lib/index.js",
@@ -24,9 +24,10 @@
   "keywords": [
     "deepseek",
     "dsh",
+    "peak",
+    "peaktime",
     "whale",
     "clock",
-    "peak",
     "pricing"
   ]
 }

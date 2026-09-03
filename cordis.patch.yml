@@ -1,5 +1,5 @@
-# DeepSeek whale countdown widget: persistent corner clock for the harness GUI.
+# DeepSeek peak-time whale countdown widget: persistent corner clock for the harness GUI.
 # Composes the package so the client-modules service serves its browser bundle.
 - insert:
-    - id: dsh-whale-clock
-      name: 'dsh-whale-clock'
+    - id: dsh-peaktime-clock
+      name: 'dsh-peaktime-clock'

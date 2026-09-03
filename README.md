@@ -1,13 +1,13 @@
-# dsh-whale-clock
+# dsh-peaktime-clock
 
 A corner clock for the DeepSeek Harness web GUI that tells you, at a glance,
-whether DeepSeek API calls are currently **peak-priced** or **off-peak** —
-without leaving your chat window.
+whether DeepSeek API calls are currently **peak-priced** (peak time) or
+**off-peak** — without leaving your chat window.
 
 An animated DeepSeek whale floats in the bottom-right corner of the harness UI.
-The whale and the pill behind it turn **red during peak-price windows** and
-**green during off-peak windows**, and the pill shows a live **countdown to the
-next window boundary** plus a local-time readout.
+The whale and the pill behind it turn **red during DeepSeek peak-time windows**
+and **green during off-peak windows**, and the pill shows a live **countdown to
+the next window boundary** plus a local-time readout.
 
 ## Price windows
 
@@ -27,7 +27,7 @@ and **renders local time and the countdown in your machine's timezone**
 ## Install
 
 ```sh
-dsh plugin --profile web add dsh-whale-clock
+dsh plugin --profile web add dsh-peaktime-clock
 ```
 
 Restart DeepSeek Harness after installation, and the whale appears in the
@@ -36,7 +36,7 @@ bottom-right corner of the web UI.
 > The package is listed on the 1024 Store; when it is published to npm the
 > store shows the install command above. Until then you can install the
 > bundle from this repository with
-> `dsh plugin --profile web add github:tingao/dsh-whale-clock` or add the
+> `dsh plugin --profile web add github:tingao/dsh-peaktime-clock` or add the
 > folder as a `file:` dependency in your profile's `package.json`.
 
 ## What it shows
@@ -52,7 +52,7 @@ Everything runs locally in the browser; no network calls, no telemetry.
 ## Layout
 
 ```
-dsh-whale-clock/
+dsh-peaktime-clock/
 ├── cordis.patch.yml   # composes the bundle row into the harness
 ├── client/client.js   # the browser widget (React via slots + timer)
 └── lib/index.js       # empty host half (the widget is client-side)
