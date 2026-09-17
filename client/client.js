@@ -12,17 +12,21 @@ const CSS = `
   z-index: 9999;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 16px;
+  gap: 7px;
+  padding: 4px 9px;
   border-radius: 999px;
   border: 1px solid;
   font-family: ui-monospace, 'Cascadia Code', 'Segoe UI Mono', Consolas, monospace;
-  font-size: 18px;
+  font-size: 13px;
   line-height: 1;
   user-select: none;
   background: rgba(16, 18, 24, 0.05);
   pointer-events: auto;
-  cursor: default;
+  cursor: grab;
+  touch-action: none;
+}
+.ds-pk-clock.ds-pk-dragging {
+  cursor: grabbing;
 }
 .ds-pk-clock.ds-pk-peak {
   color: #ff6b6b;
@@ -39,8 +43,8 @@ const CSS = `
 }
 .ds-pk-whale-svg {
   display: block;
-  width: 40px;
-  height: 40px;
+  width: 22px;
+  height: 22px;
   animation: ds-pk-swim 3.4s ease-in-out infinite;
 }
 .ds-pk-peak .ds-pk-whale-svg {
@@ -59,9 +63,9 @@ const CSS = `
 }
 .ds-pk-mood {
   position: absolute;
-  top: -11px;
-  right: -24px;
-  font-size: 13px;
+  top: -8px;
+  right: -14px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 1px;
   font-family: ui-monospace, 'Cascadia Code', 'Segoe UI Mono', Consolas, monospace;
@@ -75,10 +79,10 @@ const CSS = `
   text-shadow: 0 0 7px rgba(81, 207, 102, 0.9);
 }
 .ds-pk-time {
-  font-size: 18px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.5px;
-  min-width: 78px;
+  min-width: 52px;
   text-align: center;
 }
 .ds-pk-peak .ds-pk-time {
@@ -88,10 +92,10 @@ const CSS = `
   text-shadow: 0 0 8px rgba(81, 207, 102, 0.55);
 }
 .ds-pk-badge {
-  font-size: 11px;
+  font-size: 9px;
   font-weight: 700;
-  letter-spacing: 0.8px;
-  padding: 3px 8px;
+  letter-spacing: 0.6px;
+  padding: 2px 6px;
   border-radius: 999px;
 }
 .ds-pk-peak .ds-pk-badge {
@@ -185,6 +189,41 @@ function WhaleIcon({ peak }) {
 }
 
 // ── Component ─────────────────────────────────────────────────────────────
+// -- drag position --------------------------------------------------------
+// The widget can be dragged anywhere in the viewport; the dropped position is
+// remembered per browser, and a double-click returns it to its corner.
+const POS_KEY = 'dsh-peaktime-clock:pos';
+const EDGE = 4;
+
+function readPos() {
+  try {
+    const raw = window.localStorage.getItem(POS_KEY);
+    if (raw === null) return null;
+    const parsed = JSON.parse(raw);
+    if (typeof parsed.x === 'number' && typeof parsed.y === 'number') {
+      return { x: parsed.x, y: parsed.y };
+    }
+  } catch (e) { /* malformed entry or storage unavailable: keep the corner */ }
+  return null;
+}
+
+function savePos(pos) {
+  try {
+    if (pos === null) window.localStorage.removeItem(POS_KEY);
+    else window.localStorage.setItem(POS_KEY, JSON.stringify(pos));
+  } catch (e) { /* storage unavailable: the position just will not persist */ }
+}
+
+// Never let the widget be dragged (or left) off screen.
+function clampToViewport(x, y, width, height) {
+  const maxX = Math.max(EDGE, window.innerWidth - width - EDGE);
+  const maxY = Math.max(EDGE, window.innerHeight - height - EDGE);
+  return {
+    x: Math.min(Math.max(EDGE, x), maxX),
+    y: Math.min(Math.max(EDGE, y), maxY),
+  };
+}
+
 // Defined inside apply() so it closes over the Cordis ctx (timer service).
 function makePeakClock(ctx) {
   return function PeakClock() {
@@ -192,6 +231,75 @@ function makePeakClock(ctx) {
     const now = state[0];
     const setNow = state[1];
     React.useEffect(() => ctx.interval(() => setNow(new Date()), 1000), []);
+
+    const rootRef = React.useRef(null);
+    const posState = React.useState(readPos);
+    const pos = posState[0];
+    const setPos = posState[1];
+    const dragState = React.useState(false);
+    const dragging = dragState[0];
+    const setDragging = dragState[1];
+    const drag = React.useRef(null);
+
+    // Keep a previously dragged widget on screen when the window shrinks.
+    React.useEffect(() => {
+      function onResize() {
+        setPos(function (current) {
+          if (current === null) return null;
+          const el = rootRef.current;
+          const width = el === null ? 0 : el.offsetWidth;
+          const height = el === null ? 0 : el.offsetHeight;
+          const next = clampToViewport(current.x, current.y, width, height);
+          return next.x === current.x && next.y === current.y ? current : next;
+        });
+      }
+      window.addEventListener('resize', onResize);
+      return function () { window.removeEventListener('resize', onResize); };
+    }, []);
+
+    function onPointerDown(event) {
+      if (event.button !== 0) return;
+      const rect = event.currentTarget.getBoundingClientRect();
+      drag.current = {
+        pointerId: event.pointerId,
+        dx: event.clientX - rect.left,
+        dy: event.clientY - rect.top,
+        moved: false,
+        x: rect.left,
+        y: rect.top,
+      };
+      try { event.currentTarget.setPointerCapture(event.pointerId); } catch (e) { /* capture is optional */ }
+      setDragging(true);
+    }
+
+    function onPointerMove(event) {
+      const active = drag.current;
+      if (active === null || active.pointerId !== event.pointerId) return;
+      active.moved = true;
+      const el = event.currentTarget;
+      const next = clampToViewport(
+        event.clientX - active.dx,
+        event.clientY - active.dy,
+        el.offsetWidth,
+        el.offsetHeight);
+      active.x = next.x;
+      active.y = next.y;
+      setPos(next);
+    }
+
+    function onPointerEnd(event) {
+      const active = drag.current;
+      if (active === null || active.pointerId !== event.pointerId) return;
+      drag.current = null;
+      setDragging(false);
+      try { event.currentTarget.releasePointerCapture(event.pointerId); } catch (e) { /* already released */ }
+      if (active.moved) savePos({ x: active.x, y: active.y });
+    }
+
+    function onDoubleClick() {
+      savePos(null);
+      setPos(null);
+    }
 
     const peak = isPeak(now);
     const nb = nextBoundary(now);
@@ -206,12 +314,26 @@ function makePeakClock(ctx) {
       'Off-peak: 10:00-01:00, 04:00-06:00 UTC\n' +
       'Local: ' + formatDate(now) + ' ' + formatTime(now) + ' (' + tzLabel + ')';
 
-    return h('div', { className: 'ds-pk-clock ' + (peak ? 'ds-pk-peak' : 'ds-pk-off'), title },
+    const style = pos === null
+      ? undefined
+      : { left: pos.x + 'px', top: pos.y + 'px', right: 'auto', bottom: 'auto' };
+
+    return h('div', {
+      ref: rootRef,
+      className: 'ds-pk-clock ' + (peak ? 'ds-pk-peak' : 'ds-pk-off') + (dragging ? ' ds-pk-dragging' : ''),
+      style,
+      title: title + '\n\nDrag to move - double-click to return to the corner.',
+      onPointerDown,
+      onPointerMove,
+      onPointerUp: onPointerEnd,
+      onPointerCancel: onPointerEnd,
+      onDoubleClick,
+    },
       h('span', { className: 'ds-pk-whale' },
         h(WhaleIcon, { peak }),
         h('span', { className: 'ds-pk-mood' }, peak ? '$' : 'z z')),
       h('span', { className: 'ds-pk-time' }, left),
-      h('span', { className: 'ds-pk-badge' }, peak ? 'PEAK' : 'OFF-PEAK'));
+      h('span', { className: 'ds-pk-badge' }, peak ? 'PEAK' : 'OFF'));
   };
 }
 
